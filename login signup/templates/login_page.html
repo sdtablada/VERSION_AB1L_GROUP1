@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+    <title>Login | Atalia Hotel</title>
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+    <script src="js/script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Example form -->
+        <form action="login.php" method="post" id="form" onsubmit="return validate_all('results');">
+            <table cellspacing="10">
+                <tr><td>Login</td><td><input type="text" name="login" maxlength="25" id="login" ><br /><div id="login_length"></div> </td></tr>
+                <tr><td>Password</td><td><input type="password" name="pass" maxlength="25" id="password" onKeyUp="updatelength('password', 'pass_length')"><div id="pass_result"></div><br /><div id="pass_length"></div></td></tr>
+                <tr><td colspan="2"><input type="submit" name="submit" value="Login"></td></tr>
+            </table>
+            <h3 id="results"></h3>
+        </form>
+    </div>
+</body>
+</html>
