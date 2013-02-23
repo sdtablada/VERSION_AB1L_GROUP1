@@ -69,10 +69,18 @@ body{
 	position: fixed;
     display: none;
     padding: 25px 15px 10px 15px;
-    width: 200px;
+    width: 300px;
     top: 70px;
     right: 295px;
     z-index: 1;
+}
+input.wrong {
+    border-color: rgb(180, 207, 94);
+    background-color: rgb(255, 183, 183);
+}
+input.correct {
+    border-color: rgb(180, 207, 94);
+    background-color: rgb(220, 251, 164);
 }	
 img:hover{
 	cursor: pointer;
