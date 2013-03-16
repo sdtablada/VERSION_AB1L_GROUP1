@@ -1,0 +1,14 @@
+assumptions:
+	pwede magreserve ang bawat user ng more than one room pero pwede lang siyang mag-occupy ng isa.
+	hindi pwede magcheck out kapag walang bill, kasi imposibleng wala siyang babayaran
+	ang username ng mga walkin cutomers ay yung lastname+firstname nila, wala ng loginid to
+	
+notes:
+	*hindi matanggal yung form na kumukuha ng room number sa checkout.php :/, pero gumagana, di ko lang mafigure out kung paano siya tatanggalin 
+	*nasa gilid yung total amount sa billing&expenses sa customer side
+	*nasa taas ng table yung total amount sa checkout
+	
+	ipapasa ko mamaya sayo yung updated na srs. alam ko na kung paano gumagana ang services at billing :))
+	-jajie
+
+pabura na lang to pag nabasa mo na, baka maipasa pa kay mam. haha. thanks
