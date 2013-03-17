@@ -33,6 +33,7 @@ function initialize(){
 	document.getElementById("closesign").onclick = closeSignIn; 
 	document.getElementById("register").onclick = showRegForm;
 	document.getElementById("close").onclick = closeRegister;
+	window.onload = logErrorDisp;
 	
 	
 		
@@ -282,6 +283,15 @@ function showSignIn(){
 function closeSignIn(){
     $('#darkoverlay').fadeOut(150);
     $('#signinform').fadeOut(250);
+}
+
+function logErrorDisp(){	
+	logerr = document.getElementById("logerrhid").value;
+	if(logerr==1){
+		showSignIn();
+	}else{
+		closeSignIn();
+	}
 }
 
 //ABOUT THE HOTEL
@@ -594,12 +604,23 @@ function validate_all(output) {
 function validate_dates(field1,field2){
 	fldv1 = document.getElementById(field1).value;
 	fldv2 = document.getElementById(field2).value;
+	currDate = new Date();
+	date = currDate.getDate();
+	month = currDate.getMonth()+1;
+	year = currDate.getFullYear();
+	today = year+"-"+month+"-"+date;
+	
 	
 	if(new Date(fldv1) > new Date(fldv2)){
 		update_css_class(field2, 1);
 		update_css_class(field1, 1);
         ret_len = 0;
-	}else{
+	}else if(new Date(fldv1) < new Date(today)){
+		update_css_class(field2, 1);
+		update_css_class(field1, 1);
+        ret_len = 0;
+	}
+	else{
 		ret_len = 1;
 	}
 	return ret_len;
@@ -678,6 +699,25 @@ function validate_checkout(output){
 		return false;
     }
     return true;
+	
+}
+
+function validate_bill(output){
+	t1 = valid_length('room_number');
+	t2 = valid_length('date_availed');
+	
+	errorlist = '';
+	if (! t1) {
+        errorlist += 'Missing Room Number<br />';
+    }
+	if (! t2) {
+        errorlist += 'Invalid date<br />';
+    }
+	if (errorlist) {
+        document.getElementById(output).innerHTML = errorlist;   
+		return false;
+    }
+	return true;
 	
 }
 

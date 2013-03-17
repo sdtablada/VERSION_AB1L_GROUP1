@@ -1,12 +1,12 @@
 </div>
 	<div class="slideshow">
-		<img src="images/bg1.jpg"/>
-		<img src="images/bg2.jpg"/>
-		<img src="images/bg3.jpg"/>
-		<img src="images/bg4.jpg"/>
-		<img src="images/bg5.jpg"/>
-		<img src="images/bg6.jpg"/>
-		<img src="images/bg7.jpg"/>
+		<img src="images/bg1.jpg" id="bg1"/>
+		<img src="images/bg2.jpg" id="bg2"/>
+		<img src="images/bg3.jpg" id="bg3"/>
+		<img src="images/bg4.jpg" id="bg4"/>
+		<img src="images/bg5.jpg" id="bg5"/>
+		<img src="images/bg6.jpg" id="bg6"/>
+		<img src="images/bg7.jpg" id="bg7"/>
 		
 	</div>
 	
@@ -18,7 +18,8 @@
 					<br/><div class="bodytext">Username &nbsp;<input type="text" name="username" id="username" />
 					<br/><br/>Password &nbsp;<input type="password" name="password" id="password"/>
 					<br/><br/><input type="submit" value="Log-in" id= "log" name="login"/> </div>
-			<?php if(isset($_SESSION['logerr'])){ echo "Username and Password does not match"; unset($_SESSION['logerr']);} ?>
+			<?php if(isset($_SESSION['logerr'])){ echo "Username and Password does not match <input type=\"hidden\" id=\"logerrhid\"  value=\"1\" />";
+			unset($_SESSION['logerr']);}else{echo "<input type=\"hidden\" id=\"logerrhid\"  value=\"2\" />";}?>
 			</form>
 		</div>
 	
@@ -71,9 +72,10 @@
 		</div>
 		<!-- ABOUT THE HOTEL -->
 		<div id="aboutatalia">
-			<img src="images/hotelatalia.jpg" id="ataliaphoto"/>
+			<img src="images/logo.jpg" id="ataliaphoto"/>
 			<div id="abouttext" > Hotel Atalia provides an authentic and contemporary experience for guests worldwide. Explore our hotel 
 			and the smart design, thoughtful amenities and innovative dining options that make us a global leader in hospitality. </div>
+			<div id="exlink"> &raquo; Learn More.. </div>
         </div>
 		<!-- ROOM RESERVATION -->
 		<div id="reserveroom">
@@ -101,7 +103,7 @@
 		<!-- AVAIL SERVICES -->
 		<div id="listofservices">
                <?php
-                    $show = pg_query($DBConnection->conn, "SELECT * FROM services");
+                    $show = pg_query($DBConnection->conn, "SELECT * FROM services where servicename not like 'Room Charge'");
                     $count = pg_num_rows($show);
                     
                     echo "<table id=\"servtable\">";
@@ -115,22 +117,28 @@
                          echo "</tr>";
                     }
                     echo "</table>";
+					if(isset($_SESSION['availed'])) echo "<script>alert(\"{$_SESSION['availed']} availed!\");</script>"; 
+					unset($_SESSION['availed']);
+					if(isset($_SESSION['not'])) echo "<script>alert(\"User cannot avail {$_SESSION['not']}!\");</script>"; 
+					unset($_SESSION['not']);
+					
                ?>
 		</div>
 		
 		<!-- RECENT ACTIVITIES -->
 		<div id="listofactivities">
                <?php
-					$roomNumber = pg_query($DBConnection->conn, "SELECT roomnumber FROM \"room\" WHERE (username='$_SESSION[name]')"); //retrieve room number using customer's username
+					$roomNumber = pg_query($DBConnection->conn, "SELECT roomnumber,roomstatus FROM \"room\" WHERE (username='$_SESSION[name]')"); //retrieve room number using customer's username
 					$row = pg_fetch_assoc($roomNumber);
-						$num = $row['roomnumber'];
+					$num = $row['roomnumber'];
+					$rs = $row['roomstatus'];
 					
-					if($num != null){
+					if($rs == 'occupied'){
 						$view = pg_query($DBConnection->conn, "SELECT serviceavailed,dateavailed FROM \"bill\" WHERE (dateavailed=current_date AND roomnumber='$num')");
 						$count = pg_num_rows($view);
 						
 						echo "<table id=\"recent\">";
-						echo "<tr class=\"cell\"><th>Service Availed</th><th>Date Availed</td></th>";
+						echo "<tr class=\"cell\"><th class=\"cell\">Service Availed</th><th class=\"cell\">Date Availed</td></th>";
 						for($i=0;$i<$count;$i++){
 							 echo "<tr class=\"cell\">";
 							 $row = pg_fetch_array($view);
@@ -140,7 +148,7 @@
 						}
 						echo "</table>";
 					}else{
-						echo "<div class=\"bodytext\">User not checked-in or has no reservation</div>";
+						echo "<div class=\"bodytext\" id=\"chtext\">User not checked-in or has no reservation</center></div>";
 					}
                     
                ?>
@@ -149,7 +157,7 @@
 		<div id="billingrecords">
 			<!-- CUSTOMER VIEWS BILLS HERE	-->
 			<table id="billtable"><?php
-				$roomNumber = pg_query($DBConnection->conn, "SELECT roomnumber FROM \"room\" WHERE (username='$_SESSION[name]')"); //retrieve room number using customer's username
+				$roomNumber = pg_query($DBConnection->conn, "SELECT roomnumber FROM \"room\" WHERE (username='$_SESSION[name]' and roomstatus='occupied')"); //retrieve room number using customer's username
 				
 				
 			//	while($row = pg_fetch_assoc($roomNumber)){
@@ -195,6 +203,8 @@
 				
 		?>
 			</table>
+			<br/>
+			<br/>
 		</div>
 												<!-- ADMIN FUNCTIONALITIES-->
 		<!-- HOTEL STATISTICS -->
@@ -236,7 +246,7 @@
 		
 		<!-- ROOM STATUS -->
 			<div id="rmstatForm"> 
-				<form name="checkroomstat" id="checkroomstat" action="viewroomstat.php" method="post">
+				<form name="checkroomstat" id="checkroomstat" onsubmit="getRes()" action="viewroomstat.php" method="post">
 					<input type="submit" name="viewall"  id="viewall" value="All Rooms"/>
 					<input type="submit" name="viewvacant" id="vacant" value="Vacant Rooms"/>
 					<input type="submit" name="viewreserved" id="reserved" value="Occupied Rooms"/>		
@@ -244,16 +254,17 @@
 			
 			<div id="viewroomstatresult">
 				<table id="roomquery">
-					<tr class="cell">
+					
+						<?php
+							if(isset($_SESSION['all'])){
+								$q1 = pg_query($DBConnection->conn, "SELECT * FROM \"room\" ORDER BY roomnumber");
+								echo '<tr class="cell">
 						<th class="cell">Room Number</th>
 						<th class="cell">Status</th>
 						<th class="cell" >User</th>
 						<th class="cell">Arrival Date</th>
 						<th class="cell">Departure Date</th>
-					</tr>
-						<?php
-							if(isset($_SESSION['all'])){
-								$q1 = pg_query($DBConnection->conn, "SELECT * FROM \"room\" ORDER BY roomnumber");
+					</tr>';
 									while($row = pg_fetch_row($q1)){
 										$roomnumber = $row[0];
 										$roomstatus = $row[1];
@@ -309,6 +320,7 @@
 									}
 							unset($_SESSION['viewreserved']);
 							}
+							
 						?>
 				</table>
 			</div>
@@ -362,9 +374,21 @@
 			</div>
 			
 		<!-- BILL CUSTOMER -->
-			<div id="adminbillingform">
-				<form action="billcustomer.php" method="post" name="billcustomer" id="billcustomer">
+			<div id="adminbillingform">				
+				<form action="billcustomer.php" method="post" onsubmit="return validate_bill('div_bill');" name="billcustomer" id="billcustomer">
+				
+				<?php
+					if (isset($_GET['error'])){	$error= $_GET['error'];if($error==1) echo '<center><div class="bodytext">Room not occupied.</div></center>';}
+				
+					
+					
+					
+					
+					
+				?>
+					
 					<table id="adminbilling">
+					
 						<tr>
 							<td class="bodytext">Room Number: </td>
 							<td><input type="text" id="room_number" placeholder="Room Number" name="room_number"/></td>
@@ -391,41 +415,88 @@
 							<td></td>
 						</tr>
 					</table> 
+					
+					<div id="div_bill" style="color:red"></div>
+					
 				</form>
+				
 			<?php
 				if(isset($_SESSION['billed'])) 
 					echo "<script>alert(\"{$_SESSION['billed']} has been added to room {$_SESSION['roomnumber']} 's bills and expenses!\");</script>"; 
 					unset($_SESSION['billed']);
 			?>
+			
 			</div>
 		<!-- CHECK-IN -->
-			<div id="checkinForm">
+		<div id="checkinForm">
+				<!--Form (Checkin with/without reservation)-->
 				<form name="startform" id= "startform" action="checkin.php" method="post">
 					<input type="submit" name="reserve"  value="Check in with reservation"/>
 					<input type="submit" name="walk" value="Check in without reservation"/><br/>
-				<?php 
-					$error= $_GET['error'];
-						
-						if ($error==1) echo '<div class=\"bodytext\">The customer has not reserved the specified room number</div>';	
-						else if($error==2) echo '<div class=\"bodytext\">The user is currently checked in';
-				?>
-					
+				
+				<!--print error-->
+					<?php 
+						$error= $_GET['error'];
+							if ($error==1) echo '<div class=\"bodytext\">The customer has not reserved the specified room number</div>';	
+							else if($error==2) echo '<div class=\"bodytext\">The user is currently checked in';
+					?>
 				</form>
-			
+				<!--end of form-->
+				
+				<!--checkin with reservation-->
 				<?php 
-					if(isset($_SESSION['res'])){ 
+					if(isset($_SESSION['res'])){ 							
 				?>
 				<center>
-					<form method="post" name="checkinformwithres" id= "checkinOpt" action="checkin.php">	
-						<input type="text" name="username" id="username1" placeholder="Username" maxlength="25" /> <br/>
-						<input type="text" name="roomnumber" id="roomnumber1" placeholder="Reserved Room Number" maxlength="3" /><br /><br/>
-						<input type="submit" name="find" value="Find reservation" /> <br />	
+					<?php
+						$query = "select * from room where roomstatus='reserved'";
+						$result = pg_query($DBConnection->conn, $query);
+						if(pg_fetch_row($result)!=null){
+						echo "<table id=\"couttable\">";
+							//print list of occupied rooms
+								$query = "select * from room where  roomstatus='reserved'";
+								$result = pg_query($DBConnection->conn, $query);
+								echo "<br/>
+									<tr>
+										<th class=\"icell\">Customer</th> 
+										
+										<th class=\"icell\">Room No.</th>
+									</tr>";
+							while($row=pg_fetch_row($result)){
+								echo "<tr>
+										<td class=\"icell\">$row[2]</td>
+										
+										<td class=\"icell\">$row[0]</td>
+									</tr>";
+							}
+							echo "</table>";  ?>
+							
+								<br />
+
+
+						<form method="post" name="checkinformwithres" id= "checkinOpt" onsubmit="return validate_checkin_withres('walkin_res');" action="checkin.php">	
+							<input type="text" name="username" id="username1" placeholder="Username" maxlength="25" /> <br/>
+							<input type="text" name="roomnumber" id="roomnumber1" placeholder="Reserved Room Number" maxlength="3" /><br /><br/>
+							<input type="submit" name="find" value="Check In" /> <br />	
+							<div id="walkin_res"></div>	
 					</form>
+					
+							<?php }
+							else echo "No reserved rooms";
+							?>	
+						
+				
 				</center>
 				
-				<?php 
-					unset($_SESSION['res']); 
-				} 
+			
+				<?php
+		
+		unset($_SESSION['res']); 
+					
+					
+				}
+
+				
 				else if (isset($_SESSION['nores']))
 				{
 				?>	
@@ -447,17 +518,15 @@
 					</form>	
 			
 				<?php 
+			
 					unset($_SESSION['nores']); 
 				}
+					
 				?>
-			
-			
+				
 				<?php
-					if(isset($_SESSION['checkin'])) {
-						echo "<script>alert('Check In Successful');</script>"; 
-						unset($_SESSION['checkin']);
-					}
-					else if (isset($_SESSION['checkin2'])){
+					
+					if (isset($_SESSION['checkin2'])){
 						echo "<script>alert('Check In Successful');</script>"; 
 						unset($_SESSION['checkin2']);
 					}
